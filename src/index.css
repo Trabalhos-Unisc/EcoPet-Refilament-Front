@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-eco-emerald: #10b981;
+  --color-eco-emerald-light: #34d399;
+  --color-eco-emerald-dark: #059669;
+  --color-eco-teal: #14b8a6;
+  --color-eco-lime: #a3e635;
+  --color-eco-dark: #050b14;
+  --color-eco-dark-2: #0b1426;
+  --color-eco-card: #152238;
+  --color-eco-card-hover: #1c2b46;
+  --color-eco-surface: #2d4160;
+  --color-eco-text: #f8fafc;
+  --color-eco-muted: #94a3b8;
+  --color-eco-danger: #ef4444;
+  --color-eco-amber: #f59e0b;
+  --color-eco-blue: #3b82f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  background: var(--color-eco-dark);
+  color: var(--color-eco-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-eco-dark-2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-eco-surface);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-eco-muted);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+.stagger-5 { animation-delay: 0.25s; opacity: 0; }
+.stagger-6 { animation-delay: 0.3s; opacity: 0; }
+
+/* Glassmorphism card */
+.glass-card {
+  background: linear-gradient(145deg, rgba(21, 34, 56, 0.8), rgba(11, 20, 38, 0.9));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(45, 65, 96, 0.5);
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+
+.glass-card-hover:hover {
+  background: linear-gradient(145deg, rgba(28, 43, 70, 0.9), rgba(15, 25, 45, 0.95));
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px -8px rgba(16, 185, 129, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-eco-emerald), var(--color-eco-teal), var(--color-eco-lime));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Progress bar */
+.progress-bar {
+  background: linear-gradient(90deg, var(--color-eco-emerald), var(--color-eco-emerald-light), var(--color-eco-emerald));
+  background-size: 200% 100%;
+  animation: shimmer 5s ease-in-out infinite;
+  border-radius: 9999px;
+}
