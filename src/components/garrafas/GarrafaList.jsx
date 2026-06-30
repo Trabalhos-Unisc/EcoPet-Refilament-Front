@@ -28,7 +28,7 @@ export default function GarrafaList({ garrafasDisponiveis, garrafasHook }) {
                 <Td className="text-eco-muted">{g.dataColeta}</Td>
                 <Td align="right">
                   <button 
-                    onClick={() => garrafasHook.remover(g.id)}
+                    onClick={() => garrafasHook.removeGarrafa(g.id)}
                     className="text-eco-danger hover:text-red-400 font-medium text-xs transition-colors cursor-pointer"
                   >
                     Remover

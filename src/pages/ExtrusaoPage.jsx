@@ -8,7 +8,7 @@ import ExtrusaoResult from '../components/extrusao/ExtrusaoResult';
 import ProcessoList from '../components/extrusao/ProcessoList';
 
 export default function ExtrusaoPage() {
-  const { processos, processarLote } = useExtrusao();
+  const { processos, processar } = useExtrusao();
   const { lotes } = useLotes();
   const { garrafas } = useGarrafas();
   const { addToast } = useToast();
@@ -19,14 +19,25 @@ export default function ExtrusaoPage() {
 
   const lotesDisponiveis = lotes.filter(l => !l.processado);
 
-  const handleProcessar = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleProcessar = async (e) => {
     e.preventDefault();
+    const loteSelecionado = lotes.find(l => l.id === loteId);
+    if (!loteSelecionado) return;
+    
+    setLoading(true);
     try {
-      processarLote(loteId, parseFloat(percPerda), dataProc);
+      const densidadeLinear = 0.003;
+      const rendimento = 1 / densidadeLinear;
+      
+      await processar(loteSelecionado, garrafas, rendimento, dataProc, parseFloat(percPerda));
       addToast('Extrusão processada com sucesso!', 'success');
       setLoteId('');
     } catch (err) {
-      addToast(err.message, 'error');
+      addToast(err.message || "Erro ao processar na API", 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,6 +65,7 @@ export default function ExtrusaoPage() {
           dataProc={dataProc}
           setDataProc={setDataProc}
           handleProcessar={handleProcessar}
+          loading={loading}
         />
         <ExtrusaoResult preview={preview} />
         <ProcessoList processos={processos} />

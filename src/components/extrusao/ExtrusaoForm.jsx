@@ -12,7 +12,8 @@ export default function ExtrusaoForm({
   setPercPerda, 
   dataProc, 
   setDataProc, 
-  handleProcessar 
+  handleProcessar,
+  loading
 }) {
   return (
     <Card delay={1}>
@@ -26,6 +27,7 @@ export default function ExtrusaoForm({
             value={loteId} 
             onChange={e => setLoteId(e.target.value)} 
             required
+            disabled={loading}
           >
             <option value="" disabled>Selecione um lote</option>
             {lotesDisponiveis.map(l => (
@@ -51,6 +53,7 @@ export default function ExtrusaoForm({
           value={percPerda}
           onChange={e => setPercPerda(e.target.value)}
           required
+          disabled={loading}
         />
         <Input 
           label="Data do Processamento"
@@ -58,14 +61,15 @@ export default function ExtrusaoForm({
           value={dataProc}
           onChange={e => setDataProc(e.target.value)}
           required
+          disabled={loading}
         />
         <Button 
           type="submit" 
           fullWidth 
-          disabled={!loteId || lotesDisponiveis.length === 0}
+          disabled={!loteId || lotesDisponiveis.length === 0 || loading}
           className="mt-2"
         >
-          <Cog className="w-4 h-4 mr-1" /> Processar Extrusão
+          <Cog className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} /> {loading ? "Processando..." : "Processar Extrusão"}
         </Button>
       </form>
     </Card>
