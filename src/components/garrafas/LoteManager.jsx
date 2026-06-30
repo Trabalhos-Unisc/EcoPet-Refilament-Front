@@ -16,12 +16,30 @@ export default function LoteManager({ lotes, lotesHook, garrafasDisponiveis, gar
     );
   };
 
-  const handleCriarLote = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleCriarLote = async (e) => {
     e.preventDefault();
     if (selectedGarrafas.length === 0) return;
-    lotesHook.criar(selectedGarrafas, garrafas);
-    setSelectedGarrafas([]);
-    setShowLoteModal(false);
+    setLoading(true);
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const novoLote = await lotesHook.addLote(hoje);
+      
+      // Associa as garrafas uma a uma
+      for (const garrafaId of selectedGarrafas) {
+        const garrafaObj = garrafas.find(g => g.id === garrafaId);
+        await lotesHook.addGarrafaToLote(novoLote.id, garrafaObj);
+      }
+      
+      setSelectedGarrafas([]);
+      setShowLoteModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao criar lote na API.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,6 +80,13 @@ export default function LoteManager({ lotes, lotesHook, garrafasDisponiveis, gar
                       <Badge variant={lote.processado ? 'emerald' : 'muted'}>
                         {lote.processado ? 'Processado' : 'Aguardando'}
                       </Badge>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); lotesHook.removeLote(lote.id); }}
+                        className="text-eco-danger hover:text-red-400 text-xs font-medium cursor-pointer"
+                        title="Remover Lote"
+                      >
+                        Excluir
+                      </button>
                       <span className={`text-eco-muted transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                         <ChevronDown className="w-4 h-4" />
                       </span>
@@ -116,8 +141,8 @@ export default function LoteManager({ lotes, lotesHook, garrafasDisponiveis, gar
             <p className="text-xs text-eco-muted mb-4 text-center">
               {selectedGarrafas.length} garrafa(s) selecionada(s)
             </p>
-            <Button type="submit" fullWidth disabled={selectedGarrafas.length === 0}>
-              <Package className="w-4 h-4 mr-1" /> Criar Lote
+            <Button type="submit" fullWidth disabled={selectedGarrafas.length === 0 || loading}>
+              <Package className="w-4 h-4 mr-1" /> {loading ? "Criando Lote..." : "Criar Lote"}
             </Button>
           </div>
         </form>

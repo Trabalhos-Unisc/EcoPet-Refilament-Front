@@ -1,63 +1,90 @@
 import { useState, useCallback, useEffect } from 'react';
-
-const STORAGE_KEY = 'ecopet_lotes';
-
-function loadFromStorage() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch { return []; }
-}
-
-function saveToStorage(lotes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lotes));
-}
+import api from '../services/api';
 
 let nextId = 1;
 
 export function useLotes() {
-  const [lotes, setLotes] = useState(() => {
-    const loaded = loadFromStorage();
-    if (loaded.length > 0) {
-      const maxId = loaded.reduce((max, l) => {
-        const num = parseInt(l.id.replace('L', ''), 10);
-        return num > max ? num : max;
-      }, 0);
-      nextId = maxId + 1;
-    }
-    return loaded;
-  });
+  const [lotes, setLotes] = useState([]);
 
-  useEffect(() => { saveToStorage(lotes); }, [lotes]);
+  useEffect(() => {
+    api.get('/lotes').then(response => {
+      const data = response.data || [];
+      if (data.length > 0) {
+        const maxId = data.reduce((max, l) => {
+          if (!l.id) return max;
+          const num = parseInt(l.id.replace('L', ''), 10);
+          return num > max ? num : max;
+        }, 0);
+        nextId = maxId + 1;
+      }
+      // O backend pode retornar garrafas ao invés de garrafaIds, 
+      // precisaremos mapear para manter a compatibilidade com o front.
+      const mappedLotes = data.map(l => ({
+        ...l,
+        garrafaIds: l.garrafa ? l.garrafa.map(g => g.id) : (l.garrafaIds || []),
+        processado: l.filamentoProd > 0
+      }));
+      setLotes(mappedLotes);
+    }).catch(error => console.error("Erro ao carregar lotes:", error));
+  }, []);
 
-  const addLote = useCallback((data) => {
+  const addLote = useCallback(async (data) => {
     const id = `L${String(nextId++).padStart(3, '0')}`;
     const novo = { id, data, garrafaIds: [], filamentoProd: 0, processado: false };
-    setLotes(prev => [...prev, novo]);
-    return novo;
+    
+    try {
+      await api.post('/lotes', { id, data, garrafa: [], filamentoProd: 0 });
+      setLotes(prev => [...prev, novo]);
+      return novo;
+    } catch (error) {
+      console.error("Erro ao criar lote:", error);
+      throw error;
+    }
   }, []);
 
-  const removeLote = useCallback((id) => {
-    setLotes(prev => prev.filter(l => l.id !== id));
+  const removeLote = useCallback(async (id) => {
+    try {
+      await api.delete(`/lotes/${id}`);
+      setLotes(prev => prev.filter(l => l.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar lote:", error);
+      throw error;
+    }
   }, []);
 
-  const addGarrafaToLote = useCallback((loteId, garrafaId) => {
-    setLotes(prev => prev.map(l =>
-      l.id === loteId
-        ? { ...l, garrafaIds: [...l.garrafaIds, garrafaId] }
-        : l
-    ));
+  const addGarrafaToLote = useCallback(async (loteId, garrafa) => {
+    try {
+      // Backend: @PostMapping("/{id}/garrafas") => espera uma Garrafa
+      // Enviamos o objeto completo para evitar erros de validação (400 Bad Request)
+      await api.post(`/lotes/${loteId}/garrafas`, garrafa);
+      
+      setLotes(prev => prev.map(l =>
+        l.id === loteId
+          ? { ...l, garrafaIds: [...l.garrafaIds, garrafa.id] }
+          : l
+      ));
+    } catch (error) {
+      console.error("Erro ao adicionar garrafa ao lote:", error);
+      throw error;
+    }
   }, []);
 
-  const removeGarrafaFromLote = useCallback((loteId, garrafaId) => {
-    setLotes(prev => prev.map(l =>
-      l.id === loteId
-        ? { ...l, garrafaIds: l.garrafaIds.filter(id => id !== garrafaId) }
-        : l
-    ));
+  const removeGarrafaFromLote = useCallback(async (loteId, garrafaId) => {
+    try {
+      await api.delete(`/lotes/${loteId}/garrafas/${garrafaId}`);
+      setLotes(prev => prev.map(l =>
+        l.id === loteId
+          ? { ...l, garrafaIds: l.garrafaIds.filter(id => id !== garrafaId) }
+          : l
+      ));
+    } catch (error) {
+      console.error("Erro ao remover garrafa do lote:", error);
+      throw error;
+    }
   }, []);
 
   const markAsProcessed = useCallback((loteId, filamentoProd) => {
+    // Backend não tem endpoint PUT para lote, a lógica é tratada no processo de extrusão
     setLotes(prev => prev.map(l =>
       l.id === loteId
         ? { ...l, processado: true, filamentoProd }
@@ -80,6 +107,7 @@ export function useLotes() {
 
   const setAll = useCallback((newLotes) => {
     const maxId = newLotes.reduce((max, l) => {
+      if (!l.id) return max;
       const num = parseInt(l.id.replace('L', ''), 10);
       return num > max ? num : max;
     }, 0);

@@ -6,13 +6,24 @@ import { Save } from 'lucide-react';
 
 export default function GarrafaForm({ isOpen, onClose, garrafasHook }) {
   const [peso, setPeso] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!peso) return;
-    garrafasHook.cadastrar(parseFloat(peso));
-    setPeso('');
-    onClose();
+    
+    setLoading(true);
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      await garrafasHook.addGarrafa(parseFloat(peso), hoje);
+      setPeso('');
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar garrafa na API.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,8 +39,8 @@ export default function GarrafaForm({ isOpen, onClose, garrafasHook }) {
           onChange={e => setPeso(e.target.value)}
           required
         />
-        <Button type="submit" fullWidth disabled={!peso || parseFloat(peso) <= 0}>
-          <Save className="w-4 h-4 mr-1" /> Salvar Garrafa
+        <Button type="submit" fullWidth disabled={!peso || parseFloat(peso) <= 0 || loading}>
+          <Save className="w-4 h-4 mr-1" /> {loading ? "Salvando..." : "Salvar Garrafa"}
         </Button>
       </form>
     </Modal>
